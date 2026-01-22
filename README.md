@@ -1228,3 +1228,43 @@ ______________________________________________________________________
 Scan the following QR Code, join our WeChat group.
 
 <p align="center"><img width="300" alt="image" src="https://github.com/user-attachments/assets/f776df09-ebba-4fd5-80c2-fec4ff1518be"></p>
+
+## Entropy Module (InternVL Entropy)
+
+This repository includes a standalone entropy logging module for InternVL inference. It computes token-level Shannon entropy, sequence-level NLL, and semantic entropy (SE) from sampled responses.
+
+### Installation
+
+```bash
+pip install -r requirements/entropy.txt
+```
+
+### Example Input
+
+```json
+{"id":"sample_000001","image":"/path/to/image.jpg","prompt":"Question: ... Answer:","meta":{"dataset":"pope","split":"val","question_type":"adversarial"}}
+```
+
+### Run
+
+```bash
+python -m internvl_entropy.cli \
+  --input data/pope_val.jsonl \
+  --output runs/entropy/pope_val_entropy.jsonl \
+  --model OpenGVLab/InternVL2_5-8B \
+  --max_new_tokens 128 \
+  --num_samples 8 \
+  --sample_temperature 0.7 \
+  --sample_top_p 0.9 \
+  --se_embed_model sentence-transformers/all-MiniLM-L6-v2 \
+  --se_cluster_method agglomerative \
+  --se_threshold 0.25 \
+  --seed 42 \
+  --device cuda
+```
+
+### Output (JSONL per sample)
+
+```json
+{"id":"sample_000001","meta":{},"input":{"image":"/path/to/image.jpg","prompt":"Question: ... Answer:"},"generation":{"main":{"text":"...","tokens":["..."],"token_ids":[1]},"samples":[{"text":"..."}],"params":{"max_new_tokens":128,"main_decoding":{"do_sample":false,"temperature":0.0},"sample_decoding":{"do_sample":true,"temperature":0.7,"top_p":0.9,"num_samples":8},"seed":42}},"entropy":{"token_shannon":{"per_token":[0.0],"mean":0.0,"max":0.0,"p95":0.0},"sequence":{"nll_sum":0.0,"nll_mean":0.0,"length":0},"semantic_entropy":{"num_samples":1,"embedding_model":"sentence-transformers/all-MiniLM-L6-v2","clustering":{"method":"agglomerative","metric":"cosine","threshold":0.25},"num_clusters":1,"cluster_sizes":[1],"p":[1.0],"value":0.0}},"timing":{"main_gen_s":0.0,"sample_gen_s":0.0,"se_embed_s":0.0,"se_cluster_s":0.0},"errors":[]}
+```
